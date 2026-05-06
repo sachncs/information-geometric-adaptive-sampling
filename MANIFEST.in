@@ -1,0 +1,16 @@
+# Include documentation, examples, and tests in the source distribution.
+include README.md
+include CHANGELOG.md
+include CONTRIBUTING.md
+include FIDELITY_REPORT.md
+include REPRODUCTION_SUMMARY.md
+include LICENSE
+
+recursive-include docs *.md
+recursive-include examples *.py
+recursive-include tests *.py
+
+# Exclude build artifacts and temporary files
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.egg-info
