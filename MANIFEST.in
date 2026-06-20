@@ -2,10 +2,11 @@
 include README.md
 include CHANGELOG.md
 include CONTRIBUTING.md
-include FIDELITY_REPORT.md
-include REPRODUCTION_SUMMARY.md
+include CODE_OF_CONDUCT.md
+include SECURITY.md
 include LICENSE
 
+recursive-include src/igasgd py.typed
 recursive-include docs *.md
 recursive-include examples *.py
 recursive-include tests *.py

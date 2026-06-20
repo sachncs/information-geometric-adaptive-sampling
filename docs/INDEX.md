@@ -11,6 +11,7 @@ This directory contains comprehensive documentation for the `igasgd` package, a 
 | [API_REFERENCE.md](API_REFERENCE.md) | Complete API reference for all public modules, classes, and functions |
 | [USAGE.md](USAGE.md) | Step-by-step usage examples, CLI demo, and integration patterns |
 | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | How to run tests, lint, extend the codebase, and contribute |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment, Docker, monitoring, and troubleshooting |
 | [EXTENSIONS.md](EXTENSIONS.md) | Optional enhancements (NumPy, Numba, plotting, pluggable solvers) |
 
 ## For First-Time Users
@@ -23,7 +24,7 @@ This directory contains comprehensive documentation for the `igasgd` package, a 
 
 1. Read [MATH.md](MATH.md) for the equation-by-equation mapping.
 2. Check [ARCHITECTURE.md](ARCHITECTURE.md) for the algorithm-to-code mapping.
-3. See [FIDELITY_REPORT.md](../FIDELITY_REPORT.md) (repository root) for the confidence assessment.
+3. Check [MATH.md](MATH.md) for the full equation-to-code mapping.
 
 ## For Contributors
 

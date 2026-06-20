@@ -7,31 +7,42 @@ name = "igasgd"
 version = "0.1.0"
 description = "Information-Geometric Adaptive Sampling for Graph Diffusion"
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
+requires-python = ">=3.10"
 authors = [
     {name = "Reproduction Team", email = "repro@example.com"}
 ]
-keywords = ["graph diffusion", "adaptive sampling", "DVS", "SDE"]
+keywords = ["graph diffusion", "adaptive sampling", "DVS", "SDE", "stochastic differential equations", "generative models"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Typing :: Typed",
 ]
-requires-python = ">=3.10"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "pytest-cov", "mypy", "ruff"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "mypy",
+    "ruff",
+]
 
 [project.urls]
 Homepage = "https://arxiv.org/abs/2605.00250"
 Repository = "https://github.com/example/igasgd"
-Documentation = "https://github.com/example/igasgd/blob/main/README.md"
+Documentation = "https://github.com/example/igasgd/tree/main/docs"
+Changelog = "https://github.com/example/igasgd/blob/main/CHANGELOG.md"
+Issues = "https://github.com/example/igasgd/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -62,3 +73,7 @@ ignore = ["D100", "D104"]
 
 [tool.ruff.pydocstyle]
 convention = "google"
+
+[tool.ruff.per-file-ignores]
+"tests/*" = ["D103"]
+"examples/*" = ["D103"]
