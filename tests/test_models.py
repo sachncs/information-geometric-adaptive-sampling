@@ -3,21 +3,18 @@
 import math
 import random
 import sys
-from typing import List
 
 # Ensure the source tree is on the path when running directly.
-sys.path.insert(
-    0, __import__("os").path.join(__import__("os").path.dirname(__file__), "..", "src")
-)
+sys.path.insert(0, __import__("os").path.join(__import__("os").path.dirname(__file__), "..", "src"))
 
-from igasgd import (GDSSApproximation, GruMApproximation, SimpleGraphDenoiser,
-                    make_drift_function)
+from igasgd import GDSSApproximation, GruMApproximation, SimpleGraphDenoiser, make_drift_function
 
 
 class TestSimpleGraphDenoiser:
     """Tests for the base simplified denoising network."""
 
     def test_output_shapes_match_input(self) -> None:
+        """Verify output shapes match input."""
         model = SimpleGraphDenoiser(num_nodes=4, feature_dim=3, hidden_dim=8, seed=42)
         features = [[0.1 * i + 0.01 * j for j in range(3)] for i in range(4)]
         adjacency = [[0.0 if i == j else 0.5 for j in range(4)] for i in range(4)]
@@ -28,6 +25,7 @@ class TestSimpleGraphDenoiser:
         assert len(drift_a[0]) == 4
 
     def test_different_seeds_different_outputs(self) -> None:
+        """Verify different seeds different outputs."""
         model1 = SimpleGraphDenoiser(num_nodes=3, feature_dim=2, hidden_dim=8, seed=1)
         model2 = SimpleGraphDenoiser(num_nodes=3, feature_dim=2, hidden_dim=8, seed=2)
         features = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
@@ -35,40 +33,43 @@ class TestSimpleGraphDenoiser:
         dx1, da1 = model1(features, adjacency, time=0.5)
         dx2, da2 = model2(features, adjacency, time=0.5)
         any_diff = any(
-            abs(v1 - v2) > 1e-12 for r1, r2 in zip(dx1, dx2) for v1, v2 in zip(r1, r2)
+            abs(v1 - v2) > 1e-12
+            for r1, r2 in zip(dx1, dx2, strict=False)
+            for v1, v2 in zip(r1, r2, strict=False)
         )
-        assert (
-            any_diff
-        ), "Expected different seeds to produce different weights and outputs"
+        assert any_diff, "Expected different seeds to produce different weights and outputs"
 
     def test_same_seed_same_output(self) -> None:
+        """Verify same seed same output."""
         model1 = SimpleGraphDenoiser(num_nodes=3, feature_dim=2, hidden_dim=8, seed=42)
         model2 = SimpleGraphDenoiser(num_nodes=3, feature_dim=2, hidden_dim=8, seed=42)
         features = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
         adjacency = [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]]
         dx1, da1 = model1(features, adjacency, time=0.5)
         dx2, da2 = model2(features, adjacency, time=0.5)
-        for r1, r2 in zip(dx1, dx2):
-            for v1, v2 in zip(r1, r2):
+        for r1, r2 in zip(dx1, dx2, strict=False):
+            for v1, v2 in zip(r1, r2, strict=False):
                 assert abs(v1 - v2) < 1e-12
-        for r1, r2 in zip(da1, da2):
-            for v1, v2 in zip(r1, r2):
+        for r1, r2 in zip(da1, da2, strict=False):
+            for v1, v2 in zip(r1, r2, strict=False):
                 assert abs(v1 - v2) < 1e-12
 
     def test_time_embedding_varies_with_time(self) -> None:
+        """Verify time embedding varies with time."""
         model = SimpleGraphDenoiser(num_nodes=2, feature_dim=1, hidden_dim=4, seed=7)
         features = [[0.0], [0.0]]
         adjacency = [[0.0, 0.0], [0.0, 0.0]]
         dx1, da1 = model(features, adjacency, time=0.1)
         dx2, da2 = model(features, adjacency, time=0.9)
         any_diff = any(
-            abs(v1 - v2) > 1e-12 for r1, r2 in zip(dx1, dx2) for v1, v2 in zip(r1, r2)
+            abs(v1 - v2) > 1e-12
+            for r1, r2 in zip(dx1, dx2, strict=False)
+            for v1, v2 in zip(r1, r2, strict=False)
         )
-        assert (
-            any_diff
-        ), "Time embedding should cause different outputs at different times"
+        assert any_diff, "Time embedding should cause different outputs at different times"
 
     def test_zero_input_produces_nonzero_drift(self) -> None:
+        """Verify zero input produces nonzero drift."""
         model = SimpleGraphDenoiser(num_nodes=2, feature_dim=1, hidden_dim=4, seed=0)
         features = [[0.0], [0.0]]
         adjacency = [[0.0, 0.0], [0.0, 0.0]]
@@ -78,6 +79,7 @@ class TestSimpleGraphDenoiser:
         assert len(da) == 2
 
     def test_single_node_graph(self) -> None:
+        """Verify single node graph."""
         model = SimpleGraphDenoiser(num_nodes=1, feature_dim=1, hidden_dim=4, seed=0)
         features = [[1.0]]
         adjacency = [[0.0]]
@@ -90,14 +92,17 @@ class TestGruMApproximation:
     """Tests for the GruM-specific approximation."""
 
     def test_inherits_simple_graph_denoiser(self) -> None:
+        """Verify inherits simple graph denoiser."""
         approx = GruMApproximation(num_nodes=5, feature_dim=3, seed=42)
         assert isinstance(approx, SimpleGraphDenoiser)
 
     def test_hidden_dim_is_32(self) -> None:
+        """Verify hidden dim is 32."""
         approx = GruMApproximation(num_nodes=5, feature_dim=3, seed=42)
         assert approx._hidden_dim == 32
 
     def test_callable_interface(self) -> None:
+        """Verify callable interface."""
         approx = GruMApproximation(num_nodes=3, feature_dim=2, seed=1)
         features = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
         adjacency = [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]]
@@ -110,14 +115,17 @@ class TestGDSSApproximation:
     """Tests for the GDSS-specific approximation."""
 
     def test_inherits_simple_graph_denoiser(self) -> None:
+        """Verify inherits simple graph denoiser."""
         approx = GDSSApproximation(num_nodes=5, feature_dim=3, seed=42)
         assert isinstance(approx, SimpleGraphDenoiser)
 
     def test_hidden_dim_is_24(self) -> None:
+        """Verify hidden dim is 24."""
         approx = GDSSApproximation(num_nodes=5, feature_dim=3, seed=42)
         assert approx._hidden_dim == 24
 
     def test_callable_interface(self) -> None:
+        """Verify callable interface."""
         approx = GDSSApproximation(num_nodes=3, feature_dim=2, seed=1)
         features = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
         adjacency = [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]]
@@ -130,20 +138,22 @@ class TestMakeDriftFunction:
     """Tests for the drift function wrapper."""
 
     def test_wrapper_returns_same_as_model(self) -> None:
+        """Verify wrapper returns same as model."""
         approx = SimpleGraphDenoiser(num_nodes=3, feature_dim=2, hidden_dim=4, seed=7)
         drift = make_drift_function(approx)
         features = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
         adjacency = [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]]
         dx1, da1 = approx(features, adjacency, time=0.5)
         dx2, da2 = drift(features, adjacency, time=0.5)
-        for r1, r2 in zip(dx1, dx2):
-            for v1, v2 in zip(r1, r2):
+        for r1, r2 in zip(dx1, dx2, strict=False):
+            for v1, v2 in zip(r1, r2, strict=False):
                 assert abs(v1 - v2) < 1e-12
-        for r1, r2 in zip(da1, da2):
-            for v1, v2 in zip(r1, r2):
+        for r1, r2 in zip(da1, da2, strict=False):
+            for v1, v2 in zip(r1, r2, strict=False):
                 assert abs(v1 - v2) < 1e-12
 
     def test_wrapper_signature(self) -> None:
+        """Verify wrapper signature."""
         approx = SimpleGraphDenoiser(num_nodes=2, feature_dim=1, hidden_dim=4, seed=0)
         drift = make_drift_function(approx)
         features = [[0.0], [0.0]]
@@ -156,6 +166,7 @@ class TestInternalHelpers:
     """Tests for pure-Python linear algebra helpers inside models.py."""
 
     def test_xavier_uniform_shape_and_bounds(self) -> None:
+        """Verify xavier uniform shape and bounds."""
         from igasgd.models import _xavier_uniform
 
         rng = random.Random(42)
@@ -168,6 +179,7 @@ class TestInternalHelpers:
                 assert -limit <= val <= limit
 
     def test_matvec_basic(self) -> None:
+        """Verify matvec basic."""
         from igasgd.models import _matvec
 
         matrix = [[1.0, 2.0], [3.0, 4.0]]
@@ -176,6 +188,7 @@ class TestInternalHelpers:
         assert result == [1.0, 3.0]
 
     def test_matvec_identity(self) -> None:
+        """Verify matvec identity."""
         from igasgd.models import _matvec
 
         matrix = [[1.0, 0.0], [0.0, 1.0]]
@@ -184,6 +197,7 @@ class TestInternalHelpers:
         assert result == [5.0, -3.0]
 
     def test_matmul_basic(self) -> None:
+        """Verify matmul basic."""
         from igasgd.models import _matmul
 
         a = [[1.0, 2.0], [3.0, 4.0]]
@@ -192,6 +206,7 @@ class TestInternalHelpers:
         assert result == [[0.0, 1.0], [0.0, 3.0]]
 
     def test_matmul_identity(self) -> None:
+        """Verify matmul identity."""
         from igasgd.models import _matmul
 
         a = [[1.0, 2.0], [3.0, 4.0]]
@@ -200,6 +215,7 @@ class TestInternalHelpers:
         assert result == a
 
     def test_relu_positive_and_negative(self) -> None:
+        """Verify relu positive and negative."""
         from igasgd.models import _relu
 
         values = [-2.0, -1.0, 0.0, 1.0, 2.0]
@@ -207,12 +223,14 @@ class TestInternalHelpers:
         assert result == [0.0, 0.0, 0.0, 1.0, 2.0]
 
     def test_time_embedding_length(self) -> None:
+        """Verify time embedding length."""
         from igasgd.models import _time_embedding
 
         emb = _time_embedding(0.5, dim=8)
         assert len(emb) == 8
 
     def test_time_embedding_varies_with_time(self) -> None:
+        """Verify time embedding varies with time."""
         from igasgd.models import _time_embedding
 
         emb1 = _time_embedding(0.1, dim=8)
@@ -220,6 +238,7 @@ class TestInternalHelpers:
         assert emb1 != emb2
 
     def test_time_embedding_zero_dim(self) -> None:
+        """Verify time embedding zero dim."""
         from igasgd.models import _time_embedding
 
         emb = _time_embedding(0.5, dim=0)

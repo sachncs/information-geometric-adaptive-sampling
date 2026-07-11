@@ -1,21 +1,18 @@
 """Unit tests for hyperparameter configuration classes and lookup functions."""
 
 import sys
-from typing import Tuple
 
 # Ensure the source tree is on the path when running directly.
-sys.path.insert(
-    0, __import__("os").path.join(__import__("os").path.dirname(__file__), "..", "src")
-)
+sys.path.insert(0, __import__("os").path.join(__import__("os").path.dirname(__file__), "..", "src"))
 
-from igasgd import (DATASET_CONFIGS, CommonConfig, DatasetConfig,
-                    get_dataset_config)
+from igasgd import DATASET_CONFIGS, CommonConfig, DatasetConfig, get_dataset_config
 
 
 class TestCommonConfig:
     """Tests for the common hyperparameter dataclass (Table 6)."""
 
     def test_default_values(self) -> None:
+        """Verify default values."""
         cfg = CommonConfig()
         assert cfg.alpha == 0.2
         assert cfg.beta == 0.5
@@ -26,6 +23,7 @@ class TestCommonConfig:
         assert cfg.eps_bound == 1e-6
 
     def test_custom_values(self) -> None:
+        """Verify custom values."""
         cfg = CommonConfig(
             alpha=0.5,
             beta=1.0,
@@ -44,6 +42,7 @@ class TestCommonConfig:
         assert cfg.eps_bound == 1e-4
 
     def test_frozen_prevents_modification(self) -> None:
+        """Verify frozen prevents modification."""
         cfg = CommonConfig()
         try:
             cfg.alpha = 0.9
@@ -53,6 +52,7 @@ class TestCommonConfig:
             raise AssertionError("Expected CommonConfig to be frozen")
 
     def test_immutability_of_defaults(self) -> None:
+        """Verify immutability of defaults."""
         cfg1 = CommonConfig()
         cfg2 = CommonConfig()
         assert cfg1 == cfg2
@@ -62,6 +62,7 @@ class TestDatasetConfig:
     """Tests for the dataset-specific hyperparameter dataclass (Table 7)."""
 
     def test_is_active_full_range(self) -> None:
+        """Verify is active full range."""
         cfg = DatasetConfig(
             model="Test",
             dataset="Test",
@@ -75,6 +76,7 @@ class TestDatasetConfig:
         assert cfg.is_active(1.0)
 
     def test_is_active_partial_range(self) -> None:
+        """Verify is active partial range."""
         cfg = DatasetConfig(
             model="Test",
             dataset="Test",
@@ -92,6 +94,7 @@ class TestDatasetConfig:
         assert not cfg.is_active(1.0)
 
     def test_is_active_union_range(self) -> None:
+        """Verify is active union range."""
         cfg = DatasetConfig(
             model="Test",
             dataset="Test",
@@ -105,6 +108,7 @@ class TestDatasetConfig:
         assert cfg.is_active(0.9)
 
     def test_is_active_empty_range(self) -> None:
+        """Verify is active empty range."""
         cfg = DatasetConfig(
             model="Test",
             dataset="Test",
@@ -118,6 +122,7 @@ class TestDatasetConfig:
         assert cfg.is_active(100.0)
 
     def test_gamma_none_allowed(self) -> None:
+        """Verify gamma none allowed."""
         cfg = DatasetConfig(
             model="Test",
             dataset="Test",
@@ -130,6 +135,7 @@ class TestDatasetConfig:
         assert cfg.gamma_heun is None
 
     def test_frozen_prevents_modification(self) -> None:
+        """Verify frozen prevents modification."""
         cfg = DatasetConfig(
             model="Test",
             dataset="Test",
@@ -149,7 +155,8 @@ class TestDatasetConfigLookup:
     """Tests for get_dataset_config and the global DATASET_CONFIGS table."""
 
     def test_all_configs_present(self) -> None:
-        expected_keys: list[Tuple[str, str]] = [
+        """Verify all configs present."""
+        expected_keys: list[tuple[str, str]] = [
             ("GruM", "QM9"),
             ("GruM", "ZINC250k"),
             ("GruM", "Planar"),
@@ -163,6 +170,7 @@ class TestDatasetConfigLookup:
             assert key in DATASET_CONFIGS, f"Missing config for {key}"
 
     def test_lookup_grum_qm9(self) -> None:
+        """Verify lookup grum qm9."""
         cfg = get_dataset_config("GruM", "QM9")
         assert cfg.model == "GruM"
         assert cfg.dataset == "QM9"
@@ -172,6 +180,7 @@ class TestDatasetConfigLookup:
         assert cfg.active_range == [(0.0, 1.0)]
 
     def test_lookup_gdss_qm9(self) -> None:
+        """Verify lookup gdss qm9."""
         cfg = get_dataset_config("GDSS", "QM9")
         assert cfg.model == "GDSS"
         assert cfg.dataset == "QM9"
@@ -181,6 +190,7 @@ class TestDatasetConfigLookup:
         assert cfg.active_range == [(0.0, 0.2), (0.95, 1.0)]
 
     def test_lookup_invalid_raises_keyerror(self) -> None:
+        """Verify lookup invalid raises keyerror."""
         try:
             get_dataset_config("NonExistent", "NonExistent")
         except KeyError as exc:
@@ -189,6 +199,7 @@ class TestDatasetConfigLookup:
             raise AssertionError("Expected KeyError for invalid config lookup")
 
     def test_config_immutability_via_lookup(self) -> None:
+        """Verify config immutability via lookup."""
         cfg = get_dataset_config("GruM", "QM9")
         try:
             cfg.kappa_ref = 999.0
