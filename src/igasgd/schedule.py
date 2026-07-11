@@ -49,7 +49,7 @@ References:
 """
 
 import math
-from typing import Callable
+from collections.abc import Callable
 
 NoiseSchedule = Callable[[float], float]
 """Type alias for a callable noise schedule ``g(t) -> float``."""

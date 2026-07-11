@@ -73,7 +73,7 @@ Interactions with other modules
 
 import math
 import random
-from typing import Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
 
 from .config import CommonConfig, DatasetConfig
 from .utils import clip_value
@@ -86,8 +86,8 @@ from .utils import clip_value
 # represented as nested ``list[float]`` containers rather than NumPy arrays
 # to keep the package dependency-free.
 DriftFunction = Callable[
-    [List[List[float]], List[List[float]], float],
-    Tuple[List[List[float]], List[List[float]]],
+    [list[list[float]], list[list[float]], float],
+    tuple[list[list[float]], list[list[float]]],
 ]
 """Callable signature ``(X, A, t) -> (f_X, f_A)`` for a drift network.
 
@@ -100,9 +100,7 @@ NoiseSchedule = Callable[[float], float]
 """Callable signature ``t -> g_t`` returning the diffusion noise scale."""
 
 
-def _squared_l2_difference(
-    current: List[List[float]], previous: List[List[float]]
-) -> float:
+def _squared_l2_difference(current: list[list[float]], previous: list[list[float]]) -> float:
     """Compute the squared element-wise L2 norm between two matrices.
 
     This is the inner-loop primitive underlying
@@ -129,25 +127,23 @@ def _squared_l2_difference(
     if len(current) != len(previous):
         raise ValueError(f"Mismatched row count: {len(current)} vs {len(previous)}")
     total = 0.0
-    for row_cur, row_prev in zip(current, previous):
+    for row_cur, row_prev in zip(current, previous, strict=False):
         if len(row_cur) != len(row_prev):
-            raise ValueError(
-                f"Mismatched column count: {len(row_cur)} vs {len(row_prev)}"
-            )
-        for val_cur, val_prev in zip(row_cur, row_prev):
+            raise ValueError(f"Mismatched column count: {len(row_cur)} vs {len(row_prev)}")
+        for val_cur, val_prev in zip(row_cur, row_prev, strict=False):
             diff = val_cur - val_prev
             total += diff * diff
     return total
 
 
 def compute_drift_variation_score(
-    current_drift_x: List[List[float]],
-    previous_drift_x: List[List[float]],
-    current_drift_a: List[List[float]],
-    previous_drift_a: List[List[float]],
+    current_drift_x: list[list[float]],
+    previous_drift_x: list[list[float]],
+    current_drift_a: list[list[float]],
+    previous_drift_a: list[list[float]],
     noise_scale: float,
     eps_num: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Compute the Drift Variation Score (DVS) for both modalities.
 
     Implements **Equation 13** of the paper.  For each modality the DVS
@@ -192,7 +188,7 @@ def update_ema(
     smoothed_x: float,
     smoothed_a: float,
     alpha: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Apply the exponential moving average (EMA) smoothing step.
 
     Implements **Equation 14** of the paper:
@@ -287,7 +283,7 @@ def global_refresh(
     smoothed_x: float,
     smoothed_a: float,
     gamma: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Synchronise the two EMA states after an adapted step.
 
     Implements the "global variation refresh" described in the paper.
@@ -322,12 +318,12 @@ def global_refresh(
 
 
 def _add_drift_and_noise(
-    state: List[List[float]],
-    drift: List[List[float]],
+    state: list[list[float]],
+    drift: list[list[float]],
     timestep: float,
     noise_scale: float,
     rng: random.Random,
-) -> List[List[float]]:
+) -> list[list[float]]:
     """Apply a single Euler-style drift + diffusion update to a state matrix.
 
     This helper implements the elementary stochastic update
@@ -354,10 +350,10 @@ def _add_drift_and_noise(
     Complexity:
         O(rows * cols) time, O(rows * cols) memory for the output.
     """
-    result: List[List[float]] = []
-    for state_row, drift_row in zip(state, drift):
-        new_row: List[float] = []
-        for state_val, drift_val in zip(state_row, drift_row):
+    result: list[list[float]] = []
+    for state_row, drift_row in zip(state, drift, strict=False):
+        new_row: list[float] = []
+        for state_val, drift_val in zip(state_row, drift_row, strict=False):
             noise = noise_scale * rng.gauss(0.0, 1.0)
             new_row.append(state_val + drift_val * timestep + noise)
         result.append(new_row)
@@ -365,14 +361,14 @@ def _add_drift_and_noise(
 
 
 def euler_step(
-    features: List[List[float]],
-    adjacency: List[List[float]],
-    drift_features: List[List[float]],
-    drift_adjacency: List[List[float]],
+    features: list[list[float]],
+    adjacency: list[list[float]],
+    drift_features: list[list[float]],
+    drift_adjacency: list[list[float]],
     timestep: float,
     noise_scale: float,
     rng: random.Random,
-) -> Tuple[List[List[float]], List[List[float]]]:
+) -> tuple[list[list[float]], list[list[float]]]:
     """Apply a single Euler-Maruyama step to both modalities.
 
     Implements the Euler-Maruyama discretisation of the reverse-time SDE
@@ -400,26 +396,22 @@ def euler_step(
     Complexity:
         O(N^2 + N * D) per call.
     """
-    next_features = _add_drift_and_noise(
-        features, drift_features, timestep, noise_scale, rng
-    )
-    next_adjacency = _add_drift_and_noise(
-        adjacency, drift_adjacency, timestep, noise_scale, rng
-    )
+    next_features = _add_drift_and_noise(features, drift_features, timestep, noise_scale, rng)
+    next_adjacency = _add_drift_and_noise(adjacency, drift_adjacency, timestep, noise_scale, rng)
     return next_features, next_adjacency
 
 
 def heun_step(
-    features: List[List[float]],
-    adjacency: List[List[float]],
-    first_drift_features: List[List[float]],
-    first_drift_adjacency: List[List[float]],
+    features: list[list[float]],
+    adjacency: list[list[float]],
+    first_drift_features: list[list[float]],
+    first_drift_adjacency: list[list[float]],
     timestep: float,
     noise_scale: float,
     drift_function: DriftFunction,
     time: float,
     rng: random.Random,
-) -> Tuple[List[List[float]], List[List[float]]]:
+) -> tuple[list[list[float]], list[list[float]]]:
     """Apply a single Heun predictor-corrector step to both modalities.
 
     Implements **Algorithm 3** of the paper.  The Heun method is a
@@ -480,14 +472,14 @@ def heun_step(
 
     # Corrector: trapezoidal average of first and second drifts.
     def _average_and_update(
-        state: List[List[float]],
-        drift1: List[List[float]],
-        drift2: List[List[float]],
-    ) -> List[List[float]]:
-        result: List[List[float]] = []
-        for state_row, d1_row, d2_row in zip(state, drift1, drift2):
-            new_row: List[float] = []
-            for s, d1, d2 in zip(state_row, d1_row, d2_row):
+        state: list[list[float]],
+        drift1: list[list[float]],
+        drift2: list[list[float]],
+    ) -> list[list[float]]:
+        result: list[list[float]] = []
+        for state_row, d1_row, d2_row in zip(state, drift1, drift2, strict=False):
+            new_row: list[float] = []
+            for s, d1, d2 in zip(state_row, d1_row, d2_row, strict=False):
                 # New noise realisation is independent of the predictor's
                 # noise -- the corrector sees the same Z so the corrector
                 # trapezoidal rule remains a consistent noise scaling.
@@ -497,12 +489,8 @@ def heun_step(
             result.append(new_row)
         return result
 
-    next_features = _average_and_update(
-        features, first_drift_features, second_drift_features
-    )
-    next_adjacency = _average_and_update(
-        adjacency, first_drift_adjacency, second_drift_adjacency
-    )
+    next_features = _average_and_update(features, first_drift_features, second_drift_features)
+    next_adjacency = _average_and_update(adjacency, first_drift_adjacency, second_drift_adjacency)
     return next_features, next_adjacency
 
 
@@ -574,7 +562,7 @@ class DVSSampler:
         common_config: CommonConfig,
         dataset_config: DatasetConfig,
         solver: str = "Euler",
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         """Initialise the sampler.
 
@@ -636,11 +624,11 @@ class DVSSampler:
 
     def sample(
         self,
-        initial_features: List[List[float]],
-        initial_adjacency: List[List[float]],
+        initial_features: list[list[float]],
+        initial_adjacency: list[list[float]],
         terminal_time: float = 1.0,
         verbose: bool = False,
-    ) -> Tuple[List[List[float]], List[List[float]], Dict[str, List[float]]]:
+    ) -> tuple[list[list[float]], list[list[float]], dict[str, list[float]]]:
         """Run adaptive sampling from ``t = 0`` to ``terminal_time``.
 
         Implements the **Algorithm 1** meta-algorithm of the paper: an
@@ -698,11 +686,11 @@ class DVSSampler:
         # Cache the previous drift so we can compute DVS at the next
         # step.  ``None`` until the first step completes (Algorithm 1
         # requires two consecutive drift evaluations).
-        cached_drift_features: Optional[List[List[float]]] = None
-        cached_drift_adjacency: Optional[List[List[float]]] = None
+        cached_drift_features: list[list[float]] | None = None
+        cached_drift_adjacency: list[list[float]] | None = None
 
         # Per-step history exposed to the caller.
-        info: Dict[str, List[float]] = {
+        info: dict[str, list[float]] = {
             "steps": [],
             "dt": [],
             "time": [],
@@ -745,9 +733,7 @@ class DVSSampler:
                     common.eps_num,
                 )
                 # Equation 14: EMA smoothing of the raw DVS.
-                smoothed_x, smoothed_a = update_ema(
-                    v_x, v_a, smoothed_x, smoothed_a, common.alpha
-                )
+                smoothed_x, smoothed_a = update_ema(v_x, v_a, smoothed_x, smoothed_a, common.alpha)
                 # Equation 15: Power-law step-size scaling per modality.
                 dt_features = compute_timestep(
                     smoothed_x,
@@ -773,9 +759,7 @@ class DVSSampler:
                 # Mypy narrowing: gamma was validated in __init__.
                 assert self._gamma is not None
                 # Global variation refresh: synchronise the EMA states.
-                smoothed_x, smoothed_a = global_refresh(
-                    smoothed_x, smoothed_a, self._gamma
-                )
+                smoothed_x, smoothed_a = global_refresh(smoothed_x, smoothed_a, self._gamma)
 
                 if verbose:
                     print(
@@ -789,10 +773,7 @@ class DVSSampler:
                 v_x = 0.0
                 v_a = 0.0
                 if verbose:
-                    print(
-                        f"step={step_index:4d} time={time:.6f} "
-                        f"base   dt={timestep:.6f}"
-                    )
+                    print(f"step={step_index:4d} time={time:.6f} base   dt={timestep:.6f}")
 
             # Do not overshoot the terminal time -- shrink the last
             # step if necessary.

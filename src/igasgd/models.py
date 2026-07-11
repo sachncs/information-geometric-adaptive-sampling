@@ -60,10 +60,10 @@ References:
 
 import math
 import random
-from typing import Callable, List, Tuple
+from collections.abc import Callable
 
 
-def _xavier_uniform(rows: int, cols: int, rng: random.Random) -> List[List[float]]:
+def _xavier_uniform(rows: int, cols: int, rng: random.Random) -> list[list[float]]:
     """Generate a ``rows x cols`` matrix with Xavier uniform initialisation.
 
     Xavier (Glorot) uniform initialisation scales weights by
@@ -84,7 +84,7 @@ def _xavier_uniform(rows: int, cols: int, rng: random.Random) -> List[List[float
     return [[rng.uniform(-limit, limit) for _ in range(cols)] for _ in range(rows)]
 
 
-def _matvec(matrix: List[List[float]], vector: List[float]) -> List[float]:
+def _matvec(matrix: list[list[float]], vector: list[float]) -> list[float]:
     """Multiply a matrix by a column vector.
 
     Args:
@@ -101,10 +101,10 @@ def _matvec(matrix: List[List[float]], vector: List[float]) -> List[float]:
     Complexity:
         O(m * n).
     """
-    return [sum(w * v for w, v in zip(row, vector)) for row in matrix]
+    return [sum(w * v for w, v in zip(row, vector, strict=False)) for row in matrix]
 
 
-def _matmul(a: List[List[float]], b: List[List[float]]) -> List[List[float]]:
+def _matmul(a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
     """Multiply two matrices using pure-Python loops.
 
     Used only by :class:`SimpleGraphDenoiser` for small matrices; for
@@ -120,9 +120,9 @@ def _matmul(a: List[List[float]], b: List[List[float]]) -> List[List[float]]:
     Complexity:
         O(m * k * n).
     """
-    result: List[List[float]] = []
+    result: list[list[float]] = []
     for row in a:
-        new_row: List[float] = []
+        new_row: list[float] = []
         for col_idx in range(len(b[0])):
             val = sum(row[k] * b[k][col_idx] for k in range(len(b)))
             new_row.append(val)
@@ -130,7 +130,7 @@ def _matmul(a: List[List[float]], b: List[List[float]]) -> List[List[float]]:
     return result
 
 
-def _relu(values: List[float]) -> List[float]:
+def _relu(values: list[float]) -> list[float]:
     """Apply the element-wise ReLU activation.
 
     Args:
@@ -143,7 +143,7 @@ def _relu(values: List[float]) -> List[float]:
     return [max(0.0, v) for v in values]
 
 
-def _time_embedding(time: float, dim: int) -> List[float]:
+def _time_embedding(time: float, dim: int) -> list[float]:
     """Compute a sinusoidal time embedding (Fourier features).
 
     This is a standard diffusion-model convention originating from the
@@ -166,7 +166,7 @@ def _time_embedding(time: float, dim: int) -> List[float]:
         * ``dim = 0`` returns ``[]`` without sampling.
         * Negative ``dim`` is treated like ``0`` by the loop guard.
     """
-    embedding: List[float] = []
+    embedding: list[float] = []
     # Frequencies grow exponentially so the embedding can resolve
     # both coarse and fine time scales.
     for i in range(dim):
@@ -258,7 +258,7 @@ class SimpleGraphDenoiser:
         self._bias3 = [self._rng.gauss(0.0, 0.01) for _ in range(output_dim)]
         self._time_dim = time_dim
 
-    def _mlp(self, features: List[float]) -> List[float]:
+    def _mlp(self, features: list[float]) -> list[float]:
         """Forward pass through the 3-layer MLP with ReLU activations.
 
         Applies the affine transformation ``W_i x + b_i`` at each
@@ -273,21 +273,21 @@ class SimpleGraphDenoiser:
             Output vector of length ``output_dim``.
         """
         h = _matvec(self._weight1, features)
-        h = [v + b for v, b in zip(h, self._bias1)]
+        h = [v + b for v, b in zip(h, self._bias1, strict=False)]
         h = _relu(h)
         h = _matvec(self._weight2, h)
-        h = [v + b for v, b in zip(h, self._bias2)]
+        h = [v + b for v, b in zip(h, self._bias2, strict=False)]
         h = _relu(h)
         out = _matvec(self._weight3, h)
-        out = [v + b for v, b in zip(out, self._bias3)]
+        out = [v + b for v, b in zip(out, self._bias3, strict=False)]
         return out
 
     def __call__(
         self,
-        features: List[List[float]],
-        adjacency: List[List[float]],
+        features: list[list[float]],
+        adjacency: list[list[float]],
         time: float,
-    ) -> Tuple[List[List[float]], List[List[float]]]:
+    ) -> tuple[list[list[float]], list[list[float]]]:
         """Predict the per-modality drift at the given state and time.
 
         For each node the model concatenates the node features, the
@@ -309,8 +309,8 @@ class SimpleGraphDenoiser:
             O(N * input_dim * hidden_dim) for the per-node MLPs.
         """
         time_emb = _time_embedding(time, self._time_dim)
-        drift_features: List[List[float]] = []
-        drift_adjacency_rows: List[List[float]] = []
+        drift_features: list[list[float]] = []
+        drift_adjacency_rows: list[list[float]] = []
 
         for node_idx in range(self._num_nodes):
             node_feat = features[node_idx]
@@ -420,10 +420,10 @@ def make_drift_function(model: SimpleGraphDenoiser) -> Callable:
     """
 
     def _drift(
-        features: List[List[float]],
-        adjacency: List[List[float]],
+        features: list[list[float]],
+        adjacency: list[list[float]],
         time: float,
-    ) -> Tuple[List[List[float]], List[List[float]]]:
+    ) -> tuple[list[list[float]], list[list[float]]]:
         return model(features, adjacency, time)
 
     return _drift

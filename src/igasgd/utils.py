@@ -36,7 +36,6 @@ Limitations
 """
 
 import math
-from typing import List, Tuple
 
 
 def clip_value(value: float, lower_bound: float, upper_bound: float) -> float:
@@ -72,7 +71,7 @@ def clip_value(value: float, lower_bound: float, upper_bound: float) -> float:
     return max(lower_bound, min(upper_bound, value))
 
 
-def in_active_range(time: float, ranges: List[Tuple[float, float]]) -> bool:
+def in_active_range(time: float, ranges: list[tuple[float, float]]) -> bool:
     """Check whether ``time`` falls inside any of the provided intervals.
 
     This is the canonical predicate for the active-range logic in
@@ -106,9 +105,7 @@ def in_active_range(time: float, ranges: List[Tuple[float, float]]) -> bool:
     return any(start <= time <= end for start, end in ranges)
 
 
-def decode_adjacency(
-    adjacency: List[List[float]], threshold: float = 0.5
-) -> List[List[float]]:
+def decode_adjacency(adjacency: list[list[float]], threshold: float = 0.5) -> list[list[float]]:
     """Binarize a continuous adjacency matrix via simple thresholding.
 
     The paper mentions decoding continuous adjacency to discrete edges
@@ -142,8 +139,8 @@ def decode_adjacency(
 
 
 def sigmoid_decode_adjacency(
-    adjacency: List[List[float]], threshold: float = 0.5
-) -> List[List[float]]:
+    adjacency: list[list[float]], threshold: float = 0.5
+) -> list[list[float]]:
     """Binarize an adjacency matrix using a sigmoid activation + threshold.
 
     Use this decoder when the upstream model produces *logits* rather

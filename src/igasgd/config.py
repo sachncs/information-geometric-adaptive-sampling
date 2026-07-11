@@ -41,7 +41,6 @@ References:
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -144,9 +143,9 @@ class DatasetConfig:
     model: str
     dataset: str
     kappa_ref: float
-    gamma_euler: Optional[float] = None
-    gamma_heun: Optional[float] = None
-    active_range: List[Tuple[float, float]] = field(default_factory=list)
+    gamma_euler: float | None = None
+    gamma_heun: float | None = None
+    active_range: list[tuple[float, float]] = field(default_factory=list)
 
     def is_active(self, time: float) -> bool:
         """Check whether DVS should be computed at the given diffusion time.
