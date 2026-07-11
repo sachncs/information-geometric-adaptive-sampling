@@ -16,7 +16,32 @@ chronological order, with the full commit id, ISO-8601 datetime
 - Comprehensive module-, class-, function-, and method-level docstrings
   across the entire `igasgd` package (Google style, with "what" and
   "why" rationale).
+- One-line docstring on every test method (D102 satisfied across the
+  test suite).
 - Architecture data-flow diagram in `README.md`.
+- `scripts/ci.sh` -- a local runner mirroring `.github/workflows/ci.yml`
+  so contributors can verify the workflow before pushing.
+
+### Changed
+
+- README restyled with centred header, shields.io badges, em-dash feature
+  bullets, configuration tables for Tables 6 and 7, expanded project
+  structure, and the standard Contributing / Code of Conduct / Security /
+  License footer sections.
+- Migrated `typing.List` / `typing.Tuple` / `typing.Dict` and
+  `Optional[T]` annotations to PEP 585 / PEP 604 built-ins
+  (`list` / `tuple` / `dict` / `X | None`).
+- Switched to `collections.abc.Callable` and added explicit
+  `strict=False` to `zip()` calls.
+- Reorganised ruff configuration under `[tool.ruff.lint]` to silence
+  deprecation warnings.
+- Reduced ruff error count from 357 to 0 across `src/`, `tests/`, and
+  `examples/`.
+- Removed unused imports across all source and test modules.
+
+### Removed
+
+- Deprecation warnings emitted by older ruff configuration layout.
 
 ## [0.1.1] - 2026-07-07
 
