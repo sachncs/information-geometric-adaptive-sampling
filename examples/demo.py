@@ -149,10 +149,7 @@ def run_demo(
     )
 
     print(f"Demo: model={model} dataset={dataset} solver={solver}")
-    print(
-        f"Common config: alpha={common.alpha} beta={common.beta} "
-        f"dt_base={common.dt_base}"
-    )
+    print(f"Common config: alpha={common.alpha} beta={common.beta} dt_base={common.dt_base}")
     print(
         f"Dataset config: kappa_ref={dataset_cfg.kappa_ref} "
         f"gamma={sampler.gamma} active_range={dataset_cfg.active_range}"
@@ -227,9 +224,7 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        run_demo(
-            args.model, args.dataset, args.solver, args.seed, args.use_approximation
-        )
+        run_demo(args.model, args.dataset, args.solver, args.seed, args.use_approximation)
     except KeyError as exc:
         print(f"Error: {exc}")
         print(f"Available configs: {list(DATASET_CONFIGS.keys())}")
