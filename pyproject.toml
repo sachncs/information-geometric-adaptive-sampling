@@ -10,7 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Reproduction Team", email = "repro@example.com"}
+    {name = "Sachin", email = "sachncs@gmail.com"}
 ]
 keywords = ["graph diffusion", "adaptive sampling", "DVS", "SDE", "stochastic differential equations", "generative models"]
 classifiers = [
@@ -39,10 +39,10 @@ dev = [
 
 [project.urls]
 Homepage = "https://arxiv.org/abs/2605.00250"
-Repository = "https://github.com/example/igasgd"
-Documentation = "https://github.com/example/igasgd/tree/main/docs"
-Changelog = "https://github.com/example/igasgd/blob/main/CHANGELOG.md"
-Issues = "https://github.com/example/igasgd/issues"
+Repository = "https://github.com/sachncs/information-geometric-adaptive-sampling"
+Documentation = "https://github.com/sachncs/information-geometric-adaptive-sampling/tree/main/docs"
+Changelog = "https://github.com/sachncs/information-geometric-adaptive-sampling/blob/main/CHANGELOG.md"
+Issues = "https://github.com/sachncs/information-geometric-adaptive-sampling/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

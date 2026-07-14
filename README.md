@@ -4,8 +4,8 @@
   <p align="center">
     <a href="#installation"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
-    <a href="https://github.com/example/igasgd/actions"><img src="https://img.shields.io/github/actions/workflow/status/example/igasgd/ci.yml?branch=master" alt="CI"></a>
-    <a href="https://github.com/example/igasgd/stargazers"><img src="https://img.shields.io/github/stars/example/igasgd" alt="Stars"></a>
+    <a href="https://github.com/sachncs/information-geometric-adaptive-sampling/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/information-geometric-adaptive-sampling/ci.yml?branch=master" alt="CI"></a>
+    <a href="https://github.com/sachncs/information-geometric-adaptive-sampling/stargazers"><img src="https://img.shields.io/github/stars/sachncs/information-geometric-adaptive-sampling" alt="Stars"></a>
     <a href="https://mypy-lang.org/"><img src="https://img.shields.io/badge/mypy-strict-green.svg" alt="Checked with mypy"></a>
   </p>
 </p>
@@ -52,8 +52,8 @@ The package targets three algorithms from the paper:
 ### From source
 
 ```bash
-git clone https://github.com/example/igasgd.git
-cd igasgd
+git clone https://github.com/sachncs/information-geometric-adaptive-sampling.git
+cd information-geometric-adaptive-sampling
 pip install -e .
 ```
 
