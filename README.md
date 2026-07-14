@@ -155,15 +155,15 @@ schedule = constant_schedule(0.1)
 
 ### Common Hyperparameters (Table 6)
 
-| Parameter   | Symbol     | Default | Description                                              |
-|-------------|------------|---------|----------------------------------------------------------|
-| `alpha`     | `alpha`    | `0.2`   | EMA smoothing coefficient for the raw DVS (Equation 14). |
-| `beta`      | `beta`     | `0.5`   | Sensitivity exponent in the power-law timestep rule.    |
-| `dt_base`   | `dt_base`  | `1e-3`  | Reference timestep; also used when DVS is inactive.      |
-| `dt_min`    | `dt_min`   | `2e-4`  | Lower bound on the adapted timestep.                     |
-| `dt_max`    | `dt_max`   | `5e-3`  | Upper bound on the adapted timestep.                     |
-| `eps_num`   | `eps_num`  | `1e-12` | Numerical stabiliser added to denominators.              |
-| `eps_bound` | `eps_bound`| `1e-6`  | Boundary tolerance for sampling-loop termination.        |
+| Setting | Env Variable | Default | Description |
+|---------|--------------|---------|-------------|
+| `alpha` | — | `0.2` | EMA smoothing coefficient for the raw DVS (Equation 14). |
+| `beta` | — | `0.5` | Sensitivity exponent in the power-law timestep rule. |
+| `dt_base` | — | `1e-3` | Reference timestep; also used when DVS is inactive. |
+| `dt_min` | — | `2e-4` | Lower bound on the adapted timestep. |
+| `dt_max` | — | `5e-3` | Upper bound on the adapted timestep. |
+| `eps_num` | — | `1e-12` | Numerical stabiliser added to denominators. |
+| `eps_bound` | — | `1e-6` | Boundary tolerance for sampling-loop termination. |
 
 ### Dataset-Specific Hyperparameters (Table 7)
 
@@ -203,6 +203,24 @@ See [`docs/MATH.md`](docs/MATH.md) for the exact equations and
 
 ---
 
+## API
+
+| Symbol | Type | Description |
+|--------|------|-------------|
+| `DVSSampler` | class | Core DVS-driven adaptive sampler (Algorithms 1–3) |
+| `CommonConfig` | dataclass | Hyperparameters from Table 6 |
+| `DatasetConfig` | dataclass | Hyperparameters from Table 7 |
+| `get_dataset_config(model, dataset)` | function | Look up configuration for a (model, dataset) pair |
+| `make_drift_function(approx)` | function | Adapt a denoiser approximation to the drift interface |
+| `LinearSchedule(sigma_min, sigma_max)` | class | Linear noise schedule `g(t)` |
+| `CosineSchedule(offset)` | class | Cosine-form noise schedule |
+| `PolynomialSchedule(exponent, sigma_min, sigma_max)` | class | Power-law noise schedule |
+| `constant_schedule(sigma)` | function | Constant `g(t) = sigma` schedule |
+| `GruMApproximation(num_nodes, feature_dim, seed)` | class | Simplified GruM stand-in denoiser |
+| `GDSSApproximation(num_nodes, feature_dim, seed)` | class | Simplified GDSS stand-in denoiser |
+
+---
+
 ## Project Structure
 
 ```
@@ -239,6 +257,30 @@ igasgd/
 ├── CODE_OF_CONDUCT.md          # Community standards
 └── SECURITY.md                 # Security policy
 ```
+
+---
+
+## Testing
+
+```bash
+pytest tests/ -v
+pytest tests/ --cov=igasgd --cov-report=term-missing
+```
+
+---
+
+## Build
+
+```bash
+python -m build
+```
+
+---
+
+## Release
+
+Versions follow [Semantic Versioning](https://semver.org/). Releases are tagged
+via `version:X.Y.Z` commits in [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
